@@ -20,16 +20,16 @@ import Typography from '@mui/material/Typography';
 import { FileIcon } from 'src/components/file-icon';
 import { bytesToSize } from 'src/utils/bytes-to-size';
 
-export type File = FileWithPath;
-
+export type File = FileWithPath & {
+  path: string;
+};
 interface FileDropzoneProps extends DropzoneOptions {
   caption?: string;
-  files?: File[];
-  onRemove?: (file: File) => void;
-  onRemoveAll?: () => void;
-  onUpload?: () => void;
+  files: FileWithPath[];
+  onRemove: (file: FileWithPath) => any;
+  onRemoveAll: () => any;
+  onUpload: () => any;
 }
-
 export const FileDropzone: FC<FileDropzoneProps> = (props) => {
   const { caption, files = [], onRemove, onRemoveAll, onUpload, ...other } = props;
   const { getRootProps, getInputProps, isDragActive } = useDropzone(other);
@@ -172,10 +172,10 @@ export const FileDropzone: FC<FileDropzoneProps> = (props) => {
 
 FileDropzone.propTypes = {
   caption: PropTypes.string,
-  files: PropTypes.array,
-  onRemove: PropTypes.func,
-  onRemoveAll: PropTypes.func,
-  onUpload: PropTypes.func,
+  files: PropTypes.array.isRequired,
+  onRemove: PropTypes.func.isRequired,
+  onRemoveAll: PropTypes.func.isRequired,
+  onUpload: PropTypes.func.isRequired,
   // From Dropzone
   accept: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string.isRequired).isRequired),
   disabled: PropTypes.bool,

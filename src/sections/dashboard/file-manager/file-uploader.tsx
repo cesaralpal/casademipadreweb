@@ -9,6 +9,7 @@ import SvgIcon from '@mui/material/SvgIcon';
 import Typography from '@mui/material/Typography';
 import XIcon from '@untitled-ui/icons-react/build/esm/X';
 import { FileDropzone } from 'src/components/file-dropzone'; // Adjust this path as needed
+import { FileWithPath } from 'react-dropzone';
 
 interface FileUploaderProps {
   onClose?: () => void;
@@ -22,7 +23,7 @@ interface File {
 }
 
 export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) => {
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<FileWithPath[]>([]);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
 
   useEffect(() => {
@@ -30,12 +31,14 @@ export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) =
     setUploadProgress(0);
   }, [open]);
 
-  const handleDrop = useCallback((newFiles: File[]) => {
-    setFiles((prevFiles) => [...prevFiles, ...newFiles]);
+  const handleDrop = useCallback((acceptedFiles: FileWithPath[]) => {
+    setFiles((prevFiles) => [...prevFiles, ...acceptedFiles]);
   }, []);
 
-  const handleRemove = useCallback((file: File) => {
-    setFiles((prevFiles) => prevFiles.filter((_file) => _file.path !== file.path));
+  const handleRemove = useCallback((file: FileWithPath): void => {
+    if (file.path) {
+      setFiles((prevFiles) => prevFiles.filter((_file) => _file.path !== file.path));
+    }
   }, []);
 
   const handleRemoveAll = useCallback(() => {
@@ -44,34 +47,37 @@ export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) =
 
   const handleUpload = async () => {
     const formData = new FormData();
-    files.forEach((file) => {
-      if (file.type.includes('audio/')) {
-        formData.append('podcast', file);
-      } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-        formData.append('file', file);
-      }
+    files.forEach(file => {
+        if (file.type.includes('audio/')) {
+            formData.append('podcast', file as Blob, file.name);
+        } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+            formData.append('file', file as Blob, file.name);
+        }
     });
 
     try {
-      const response = await axios.post('https://devocional-casa-de-mi-padre.onrender.com/devocional', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          setUploadProgress(percentCompleted);
-        },
-      });
+        const response = await axios.post('https://devocional-casa-de-mi-padre.onrender.com/devocional', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            },
+            onUploadProgress: (progressEvent) => {
+                // Check if total size is available
+                if (progressEvent.total) {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    setUploadProgress(percentCompleted);
+                }
+            }
+        });
 
-      if (response.status === 200) {
-        onClose?.();
-      } else {
-        console.error('File upload failed');
-      }
+        if (response.status === 200) {
+            onClose?.();
+        } else {
+            console.error('File upload failed');
+        }
     } catch (error) {
-      console.error('Error uploading file:', error);
+        console.error('Error uploading file:', error);
     }
-  };
+};
 
   return (
     <Dialog fullWidth maxWidth="sm" open={open} onClose={onClose}>
@@ -100,5 +106,6 @@ export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) =
     </Dialog>
   );
 };
+
 
 export default FileUploader;
