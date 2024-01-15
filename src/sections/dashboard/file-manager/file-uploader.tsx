@@ -56,7 +56,7 @@ export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) =
     });
 
     try {
-        const response = await axios.post('https://devocional-casa-de-mi-padre.onrender.com/devocional', formData, {
+        const response = await axios.post('https://devo-casa-de-mi-padre.onrender.com/devocional', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             },
