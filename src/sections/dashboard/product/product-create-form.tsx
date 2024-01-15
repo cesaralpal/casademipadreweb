@@ -210,14 +210,14 @@ export const ProductCreateForm: FC = (props) => {
                 xs={12}
                 md={8}
               >
-                <FileDropzone
+                {/* <FileDropzone
                   accept={{ 'image/*': [] }}
                   caption="(SVG, JPG, PNG, or gif maximum 900x400)"
                   files={files}
                   onDrop={handleFilesDrop}
                   onRemove={handleFileRemove}
                   onRemoveAll={handleFilesRemoveAll}
-                />
+                /> */}
               </Grid>
             </Grid>
           </CardContent>
