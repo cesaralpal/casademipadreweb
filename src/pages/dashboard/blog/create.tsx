@@ -25,6 +25,7 @@ import { usePageView } from 'src/hooks/use-page-view';
 import { Layout as DashboardLayout } from 'src/layouts/dashboard';
 import { paths } from 'src/paths';
 import { fileToBase64 } from 'src/utils/file-to-base64';
+import { FileWithPath } from 'react-dropzone';
 
 const initialCover = '/assets/covers/abstract-1-4x3-large.png';
 
@@ -33,7 +34,7 @@ const Page: NextPage = () => {
 
   usePageView();
 
-  const handleCoverDrop = useCallback(async ([file]: File[]) => {
+  const handleCoverDrop = useCallback(async ([file]: FileWithPath[]) => {
     const data = (await fileToBase64(file)) as string;
     setCover(data);
   }, []);
@@ -222,12 +223,15 @@ const Page: NextPage = () => {
                           Remove photo
                         </Button>
                       </div>
-                      <FileDropzone
-                        accept={{ 'image/*': [] }}
-                        maxFiles={1}
-                        onDrop={handleCoverDrop}
-                        caption="(SVG, JPG, PNG, or gif maximum 900x400)"
-                      />
+                      {/* <FileDropzone
+          accept={{ 'audio/*': ['.mp3', '.wav'], 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'] }}
+          caption="Max file size is 500 MB"
+          files={files}
+          onDrop={handleDrop}
+          onRemove={handleRemove}
+          onRemoveAll={handleRemoveAll}
+          onUpload={handleUpload}
+        /> */}
                     </Stack>
                   </Grid>
                 </Grid>
