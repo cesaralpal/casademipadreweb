@@ -54,7 +54,6 @@ export const UploadNews = () => {
     formik.setFieldValue("image", event.currentTarget.files[0]);
   };
   const handleButtonClick = () => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
     if (fileInputRef.current) {
       fileInputRef.current.click();
