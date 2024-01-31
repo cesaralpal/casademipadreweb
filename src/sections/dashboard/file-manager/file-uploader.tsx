@@ -47,17 +47,29 @@ export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) =
 
   const handleUpload = async () => {
     const formData = new FormData();
+    let docCount = 0;
+    let podcastCount = 0;
+  
     files.forEach(file => {
-        if (file.type.includes('audio/')) {
-            formData.append('podcast', file as Blob, file.name);
-        } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-            formData.append('file', file as Blob, file.name);
-        }
+      if (file.type.includes('audio/') && podcastCount < 7) {
+        podcastCount++;
+        formData.append(`podcast${podcastCount}`, file, file.name);
+      } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' && docCount < 7) {
+        docCount++;
+        formData.append(`file${docCount}`, file, file.name);
+      }
     });
+  
+    if (docCount !== 7 || podcastCount !== 7) {
+      console.error('You must select exactly 7 documents and 7 podcasts');
+      return;
+    }
 
     try {
+
         const response = await axios.post('https://devo-casa-de-mi-padre.onrender.com/devocional', formData, {
             headers: {
+              'Accept':'*/*',
                 'Content-Type': 'multipart/form-data'
             },
             onUploadProgress: (progressEvent) => {

@@ -22,6 +22,8 @@ import { ItemDrawer } from 'src/sections/dashboard/file-manager/item-drawer';
 import { ItemList } from 'src/sections/dashboard/file-manager/item-list';
 import { ItemSearch } from 'src/sections/dashboard/file-manager/item-search';
 import { StorageStats } from 'src/sections/dashboard/file-manager/storage-stats';
+import { UploadNews } from 'src/sections/dashboard/file-manager/uploadIMage';
+
 import type { Item } from 'src/types/file-manager';
 
 type View = 'grid' | 'list';
@@ -273,7 +275,8 @@ const Page: NextPage = () => {
               xs={12}
               md={4}
             >
-              <StorageStats />
+              {/* <StorageStats /> */}
+              <UploadNews/>
             </Grid>
           </Grid>
         </Container>
