@@ -10,7 +10,7 @@ const validationSchema = yup.object({
 
 export const UploadNews = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formik = useFormik({
     initialValues: {
@@ -53,8 +53,8 @@ export const UploadNews = () => {
   const handleImageChange = (event:any) => {
     formik.setFieldValue("image", event.currentTarget.files[0]);
   };
+  
   const handleButtonClick = () => {
-
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
