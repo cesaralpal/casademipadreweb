@@ -4,8 +4,8 @@ import { useFormik } from 'formik';
 import * as yup from 'yup';
 
 const validationSchema = yup.object({
-  title: yup.string('Enter the title').required('Title is required'),
-  description: yup.string('Enter the description').required('Description is required'),
+  title: yup.string().required('Title is required'),
+  description: yup.string().required('Description is required'),
 });
 
 export const UploadNews = () => {
@@ -21,7 +21,12 @@ export const UploadNews = () => {
     validationSchema: validationSchema,
     onSubmit: (values, { resetForm }) => {
       const formData = new FormData();
-      formData.append('image_file', values.image);
+      if (values.image) {
+        formData.append('image_file', values.image);
+      }
+
+      formData.append('title', values.title);
+      formData.append('description', values.description);
       formData.append('title', values.title);
       formData.append('description', values.description);
 
@@ -45,12 +50,15 @@ export const UploadNews = () => {
     },
   });
 
-  const handleImageChange = (event) => {
+  const handleImageChange = (event:any) => {
     formik.setFieldValue("image", event.currentTarget.files[0]);
   };
-
   const handleButtonClick = () => {
-    fileInputRef.current.click();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   return (
