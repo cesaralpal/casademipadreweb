@@ -49,9 +49,9 @@ export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) =
     const formData = new FormData();
     const pairedFiles = files.reduce((acc, file) => {
       if (file.type.includes('audio/')) {
-        acc.audio.push(file);
+        acc.audio.push(file as never);
       } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-        acc.docx.push(file);
+        acc.docx.push(file as never);
       }
       return acc;
     }, { audio: [], docx: [] });
@@ -61,10 +61,10 @@ export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) =
       return;
     }
 
-    pairedFiles.audio.forEach((file, index) => {
+    pairedFiles.audio.forEach((file:FileWithPath, index) => {
       formData.append(`podcast${index + 1}`, file, file.name);
     });
-    pairedFiles.docx.forEach((file, index) => {
+    pairedFiles.docx.forEach((file:FileWithPath, index) => {
       formData.append(`file${index + 1}`, file, file.name);
     });
 
