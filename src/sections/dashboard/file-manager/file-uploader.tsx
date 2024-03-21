@@ -52,9 +52,9 @@ export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) =
   
     files.forEach(file => {
       if (file.type.includes('audio/')) {
-        formData.append(`podcast${podcastCount}`, file, file.name);
+        formData.append(`podcast$`, file, file.name);
       } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-        formData.append(`file${docCount}`, file, file.name);
+        formData.append(`file`, file, file.name);
       }
     });
 
