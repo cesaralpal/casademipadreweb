@@ -342,8 +342,8 @@ export const useSections = () => {
         ],
       },
       {
-        // subheader: t(tokens.nav.pages),
-        // items: [
+         subheader: t(tokens.nav.pages),
+         items: [
         //   {
         //     title: t(tokens.nav.auth),
         //     icon: (
@@ -468,11 +468,11 @@ export const useSections = () => {
         //       },
         //     ],
         //   },
-        // ],
+         ],
       },
       {
-        // subheader: 'Misc',
-        // items: [
+        subheader: 'Misc',
+        items: [
         //   {
         //     title: 'Level 0',
         //     icon: (
@@ -549,7 +549,7 @@ export const useSections = () => {
         //       </SvgIcon>
         //     ),
         //   },
-        // ],
+        ],
       },
     ];
   }, [t]);
