@@ -257,7 +257,7 @@ const Page: NextPage = () => {
                   sortDir={itemsSearch.state.sortDir}
                   view={view}
                 />
-                <ItemList
+                {/* <ItemList
                   count={itemsStore.itemsCount}
                   items={itemsStore.items}
                   onDelete={handleDelete}
@@ -268,7 +268,7 @@ const Page: NextPage = () => {
                   page={itemsSearch.state.page}
                   rowsPerPage={itemsSearch.state.rowsPerPage}
                   view={view}
-                />
+                /> */}
               </Stack>
             </Grid>
             <Grid
