@@ -47,42 +47,39 @@ export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) =
 
   const handleUpload = async () => {
     const formData = new FormData();
-    let docCount = 0;
-    let podcastCount = 0;
   
-    files.forEach(file => {
+    files.forEach((file) => {
       if (file.type.includes('audio/')) {
-        formData.append(`podcast$`, file, file.name);
+        formData.append('podcast', file, file.name);
       } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-        formData.append(`file`, file, file.name);
+        formData.append('file', file, file.name);
       }
+      // Include additional else if conditions here for other file types if needed
     });
-
+  
     try {
-
-        const response = await axios.post('https://devo-casa-de-mi-padre.onrender.com/devocional', formData, {
-            headers: {
-              'Accept':'*/*',
-                'Content-Type': 'multipart/form-data'
-            },
-            onUploadProgress: (progressEvent) => {
-                // Check if total size is available
-                if (progressEvent.total) {
-                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                    setUploadProgress(percentCompleted);
-                }
-            }
-        });
-
-        if (response.status === 200) {
-            onClose?.();
-        } else {
-            console.error('File upload failed');
+      const response = await axios.post('https://devo-casa-de-mi-padre.onrender.com/devocional', formData, {
+        headers: {
+          'Accept': '*/*',
+          'Content-Type': 'multipart/form-data'
+        },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(percentCompleted);
+          }
         }
+      });
+  
+      if (response.status === 200) {
+        onClose?.();
+      } else {
+        console.error('File upload failed');
+      }
     } catch (error) {
-        console.error('Error uploading file:', error);
+      console.error('Error uploading file:', error);
     }
-};
+  };
 
   return (
     <Dialog fullWidth maxWidth="sm" open={open} onClose={onClose}>
