@@ -8,18 +8,12 @@ import Stack from '@mui/material/Stack';
 import SvgIcon from '@mui/material/SvgIcon';
 import Typography from '@mui/material/Typography';
 import XIcon from '@untitled-ui/icons-react/build/esm/X';
-import { FileDropzone } from 'src/components/file-dropzone'; // Adjust this path as needed
+import { FileDropzone } from 'src/components/file-dropzone';
 import { FileWithPath } from 'react-dropzone';
 
 interface FileUploaderProps {
   onClose?: () => void;
   open?: boolean;
-}
-
-interface File {
-  path: string;
-  type: string;
-  [key: string]: any;
 }
 
 export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) => {
@@ -36,9 +30,7 @@ export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) =
   }, []);
 
   const handleRemove = useCallback((file: FileWithPath): void => {
-    if (file.path) {
-      setFiles((prevFiles) => prevFiles.filter((_file) => _file.path !== file.path));
-    }
+    setFiles((prevFiles) => prevFiles.filter((_file) => _file.path !== file.path));
   }, []);
 
   const handleRemoveAll = useCallback(() => {
@@ -47,45 +39,29 @@ export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) =
 
   const handleUpload = async () => {
     const formData = new FormData();
-    const pairedFiles = files.reduce((acc, file) => {
-      if (file.type.includes('audio/')) {
-        acc.audio.push(file as never);
-      } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-        acc.docx.push(file as never);
-      }
-      return acc;
-    }, { audio: [], docx: [] });
-
-    if (pairedFiles.audio.length !== pairedFiles.docx.length) {
-      console.error('The number of documents and podcasts must be equal.');
-      return;
-    }
-
-    pairedFiles.audio.forEach((file:FileWithPath, index) => {
-      formData.append(`podcast${index + 1}`, file, file.name);
-    });
-    pairedFiles.docx.forEach((file:FileWithPath, index) => {
-      formData.append(`file${index + 1}`, file, file.name);
+  
+    files.forEach((file, index) => {
+      formData.append(`file${index}`, file, file.name);
     });
 
     try {
       const response = await axios.post('https://devo-casa-de-mi-padre.onrender.com/devocional', formData, {
-          headers: {
-            'Accept':'*/*',
-            'Content-Type': 'multipart/form-data'
-          },
-          onUploadProgress: (progressEvent) => {
-              if (progressEvent.total) {
-                  const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                  setUploadProgress(percentCompleted);
-              }
+        headers: {
+          'Accept':'*/*',
+          'Content-Type': 'multipart/form-data'
+        },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(percentCompleted);
           }
+        }
       });
 
       if (response.status === 200) {
-          onClose?.();
+        onClose?.();
       } else {
-          console.error('File upload failed');
+        console.error('File upload failed');
       }
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -104,7 +80,13 @@ export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) =
       </Stack>
       <DialogContent>
         <FileDropzone
-          accept={{ 'audio/*': ['.mp3', '.wav'], 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'] }}
+            accept={{
+              'audio/*': [], // Accept all audio types without specifying extensions
+              'image/*': [], // Accept all image types without specifying extensions
+              'video/*': [], // Accept all video types without specifying extensions
+              'application/*': [], // Accept all application types without specifying extensions
+              'text/*': [], // Accept all text types without specifying extensions
+            }} // Allow all file types
           caption="Max file size is 500 MB"
           files={files}
           onDrop={handleDrop}
