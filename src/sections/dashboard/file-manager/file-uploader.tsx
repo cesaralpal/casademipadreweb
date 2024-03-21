@@ -86,6 +86,8 @@ export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) =
               'video/*': [], // Accept all video types without specifying extensions
               'application/*': [], // Accept all application types without specifying extensions
               'text/*': [], // Accept all text types without specifying extensions
+              'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+              'application/pdf': ['.pdf']
             }} // Allow all file types
           caption="Max file size is 500 MB"
           files={files}
