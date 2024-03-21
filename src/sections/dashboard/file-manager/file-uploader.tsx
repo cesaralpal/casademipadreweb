@@ -8,12 +8,18 @@ import Stack from '@mui/material/Stack';
 import SvgIcon from '@mui/material/SvgIcon';
 import Typography from '@mui/material/Typography';
 import XIcon from '@untitled-ui/icons-react/build/esm/X';
-import { FileDropzone } from 'src/components/file-dropzone';
+import { FileDropzone } from 'src/components/file-dropzone'; // Adjust this path as needed
 import { FileWithPath } from 'react-dropzone';
 
 interface FileUploaderProps {
   onClose?: () => void;
   open?: boolean;
+}
+
+interface File {
+  path: string;
+  type: string;
+  [key: string]: any;
 }
 
 export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) => {
@@ -30,7 +36,9 @@ export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) =
   }, []);
 
   const handleRemove = useCallback((file: FileWithPath): void => {
-    setFiles((prevFiles) => prevFiles.filter((_file) => _file.path !== file.path));
+    if (file.path) {
+      setFiles((prevFiles) => prevFiles.filter((_file) => _file.path !== file.path));
+    }
   }, []);
 
   const handleRemoveAll = useCallback(() => {
@@ -39,34 +47,42 @@ export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) =
 
   const handleUpload = async () => {
     const formData = new FormData();
+    let docCount = 0;
+    let podcastCount = 0;
   
-    files.forEach((file, index) => {
-      formData.append(`file${index}`, file, file.name);
+    files.forEach(file => {
+      if (file.type.includes('audio/')) {
+        formData.append(`podcast${podcastCount}`, file, file.name);
+      } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        formData.append(`file${docCount}`, file, file.name);
+      }
     });
 
     try {
-      const response = await axios.post('https://devo-casa-de-mi-padre.onrender.com/devocional', formData, {
-        headers: {
-          'Accept':'*/*',
-          'Content-Type': 'multipart/form-data'
-        },
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            setUploadProgress(percentCompleted);
-          }
-        }
-      });
 
-      if (response.status === 200) {
-        onClose?.();
-      } else {
-        console.error('File upload failed');
-      }
+        const response = await axios.post('https://devo-casa-de-mi-padre.onrender.com/devocional', formData, {
+            headers: {
+              'Accept':'*/*',
+                'Content-Type': 'multipart/form-data'
+            },
+            onUploadProgress: (progressEvent) => {
+                // Check if total size is available
+                if (progressEvent.total) {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    setUploadProgress(percentCompleted);
+                }
+            }
+        });
+
+        if (response.status === 200) {
+            onClose?.();
+        } else {
+            console.error('File upload failed');
+        }
     } catch (error) {
-      console.error('Error uploading file:', error);
+        console.error('Error uploading file:', error);
     }
-  };
+};
 
   return (
     <Dialog fullWidth maxWidth="sm" open={open} onClose={onClose}>
@@ -80,15 +96,7 @@ export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) =
       </Stack>
       <DialogContent>
         <FileDropzone
-            accept={{
-              'audio/*': [], // Accept all audio types without specifying extensions
-              'image/*': [], // Accept all image types without specifying extensions
-              'video/*': [], // Accept all video types without specifying extensions
-              'application/*': [], // Accept all application types without specifying extensions
-              'text/*': [], // Accept all text types without specifying extensions
-              'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-              'application/pdf': ['.pdf']
-            }} // Allow all file types
+          accept={{ 'audio/*': ['.mp3', '.wav'], 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'] }}
           caption="Max file size is 500 MB"
           files={files}
           onDrop={handleDrop}
@@ -103,5 +111,6 @@ export const FileUploader: FC<FileUploaderProps> = ({ onClose, open = false }) =
     </Dialog>
   );
 };
+
 
 export default FileUploader;
