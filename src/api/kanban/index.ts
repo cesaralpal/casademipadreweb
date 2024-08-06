@@ -82,12 +82,12 @@ class KanbanApi {
 
     console.log(devotionals)
     // Transform the devotionals data to match the Board type
-    const columns = devotionals.map(devotional => ({
+    const columns = devotionals.map((devotional: { id: any; titulo: any; }) => ({
       id: devotional.id,
       name: devotional.titulo,
       taskIds: [devotional.id],  // Here we use the devotional ID for tasks
   }));
-  const tasks = devotionals.map(devotional => ({
+  const tasks = devotionals.map((devotional: { id: any; titulo: any; soundcloud_link: any; video_link: any; fecha: any; devocional: any; }) => ({
     id: devotional.id,
     columnId: devotional.id,
     name: devotional.titulo,
