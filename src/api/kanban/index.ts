@@ -1,7 +1,7 @@
+import axios from 'axios';
 import type { Board, CheckItem, Checklist, Column, Comment, Task } from 'src/types/kanban';
 import { createResourceId } from 'src/utils/create-resource-id';
 import { deepCopy } from 'src/utils/deep-copy';
-
 import { data } from './data';
 
 // On server get current identity (user) from the request
@@ -11,46 +11,22 @@ const user = {
   name: 'Anika Visser',
 };
 
-// You'll see here that we start with a deep clone of the board.
-// The reason for that is to create a db session wannabe strategy.
-// If something fails, we do not affect the original data until everything worked as expected.
-
 type GetBoardRequest = object;
-
 type GetBoardResponse = Promise<Board>;
 
-type CreateColumnRequest = {
-  name: string;
-};
-
+type CreateColumnRequest = { name: string };
 type CreateColumnResponse = Promise<Column>;
 
-type UpdateColumnRequest = {
-  columnId: string;
-  update: {
-    name: string;
-  };
-};
-
+type UpdateColumnRequest = { columnId: string; update: { name: string } };
 type UpdateColumnResponse = Promise<Column>;
 
-type ClearColumnRequest = {
-  columnId: string;
-};
-
+type ClearColumnRequest = { columnId: string };
 type ClearColumnResponse = Promise<true>;
 
-type DeleteColumnRequest = {
-  columnId: string;
-};
-
+type DeleteColumnRequest = { columnId: string };
 type DeleteColumnResponse = Promise<true>;
 
-type CreateTaskRequest = {
-  columnId: string;
-  name: string;
-};
-
+type CreateTaskRequest = { columnId: string; name: string };
 type CreateTaskResponse = Promise<Task>;
 
 type UpdateTaskRequest = {
@@ -62,60 +38,27 @@ type UpdateTaskRequest = {
     labels?: string[];
   };
 };
-
 type UpdateTaskResponse = Promise<Task>;
 
-type MoveTaskRequest = {
-  taskId: string;
-  position: number;
-  columnId?: string;
-};
-
+type MoveTaskRequest = { taskId: string; position: number; columnId?: string };
 type MoveTaskResponse = Promise<true>;
 
-type DeleteTaskRequest = {
-  taskId: string;
-};
-
+type DeleteTaskRequest = { taskId: string };
 type DeleteTaskResponse = Promise<true>;
 
-type AddCommentRequest = {
-  taskId: string;
-  message: string;
-};
-
+type AddCommentRequest = { taskId: string; message: string };
 type AddCommentResponse = Promise<Comment>;
 
-type AddChecklistRequest = {
-  taskId: string;
-  name: string;
-};
-
+type AddChecklistRequest = { taskId: string; name: string };
 type AddChecklistResponse = Promise<Checklist>;
 
-type UpdateChecklistRequest = {
-  taskId: string;
-  checklistId: string;
-  update: {
-    name: string;
-  };
-};
-
+type UpdateChecklistRequest = { taskId: string; checklistId: string; update: { name: string } };
 type UpdateChecklistResponse = Promise<Checklist>;
 
-type DeleteChecklistRequest = {
-  taskId: string;
-  checklistId: string;
-};
-
+type DeleteChecklistRequest = { taskId: string; checklistId: string };
 type DeleteChecklistResponse = Promise<true>;
 
-type AddCheckItemRequest = {
-  taskId: string;
-  checklistId: string;
-  name: string;
-};
-
+type AddCheckItemRequest = { taskId: string; checklistId: string; name: string };
 type AddCheckItemResponse = Promise<CheckItem>;
 
 type UpdateCheckItemRequest = {
@@ -127,20 +70,61 @@ type UpdateCheckItemRequest = {
     state?: 'complete' | 'incomplete';
   };
 };
-
 type UpdateCheckItemResponse = Promise<CheckItem>;
 
-type DeleteCheckItemRequest = {
-  taskId: string;
-  checklistId: string;
-  checkItemId: string;
-};
-
+type DeleteCheckItemRequest = { taskId: string; checklistId: string; checkItemId: string };
 type DeleteCheckItemResponse = Promise<true>;
 
 class KanbanApi {
-  getBoard(request: GetBoardRequest = {}): GetBoardResponse {
-    return Promise.resolve(deepCopy(data.board));
+  async getBoard(request: GetBoardRequest = {}): GetBoardResponse {
+    const response = await axios.get('https://devo-casa-de-mi-padre.onrender.com/devocionales-list');
+    const devotionals = response.data.data.results;
+
+    console.log(devotionals)
+    // Transform the devotionals data to match the Board type
+    const columns = devotionals.map(devotional => ({
+      id: devotional.id,
+      name: devotional.titulo,
+      taskIds: [devotional.id],  // Here we use the devotional ID for tasks
+  }));
+  const tasks = devotionals.map(devotional => ({
+    id: devotional.id,
+    columnId: devotional.id,
+    name: devotional.titulo,
+    assigneesIds: [
+
+    ],
+    attachments: [
+        {
+            name: "Podcast",
+            url: devotional.soundcloud_link || "",
+        },
+        {
+            name: "Video",
+            url: devotional.video_link || "",
+        }
+    ],
+    authorId: devotional.fecha,  // Assuming you have the user ID available
+    checklists: [],
+        comments: [],
+    description: 
+    devotional.fecha +
+    devotional.devocional|| '',
+    due: null,
+    isSubscribed: false,
+    labels: [
+        devotional.video_link,
+        devotional.soundcloud_link
+    ],
+}));
+
+    const board: Board = {
+      columns,
+      tasks,
+      members: [],
+    };
+
+    return Promise.resolve(deepCopy(board));
   }
 
   createColumn(request: CreateColumnRequest): CreateColumnResponse {
@@ -148,21 +132,14 @@ class KanbanApi {
 
     return new Promise((resolve, reject) => {
       try {
-        // Make a deep copy
         const clonedBoard = deepCopy(data.board);
-
-        // Create the new column
         const column: Column = {
           id: createResourceId(),
           name,
           taskIds: [],
         };
-
         clonedBoard.columns.push(column);
-
-        // Save changes
         data.board = clonedBoard;
-
         resolve(deepCopy(column));
       } catch (err) {
         console.error('[Kanban Api]: ', err);
@@ -176,10 +153,7 @@ class KanbanApi {
 
     return new Promise((resolve, reject) => {
       try {
-        // Make a deep copy
         const clonedBoard: Board = deepCopy(data.board);
-
-        // Find the column to clear
         const column = clonedBoard.columns.find((column) => column.id === columnId);
 
         if (!column) {
@@ -187,12 +161,8 @@ class KanbanApi {
           return;
         }
 
-        // Update the column
         Object.assign(column, update);
-
-        // Save changes
         data.board = clonedBoard;
-
         resolve(deepCopy(column));
       } catch (err) {
         console.error('[Kanban Api]: ', err);
@@ -206,10 +176,7 @@ class KanbanApi {
 
     return new Promise((resolve, reject) => {
       try {
-        // Make a deep copy
         const clonedBoard: Board = deepCopy(data.board);
-
-        // Find the column to clear
         const column = clonedBoard.columns.find((column) => column.id === columnId);
 
         if (!column) {
@@ -217,13 +184,9 @@ class KanbanApi {
           return;
         }
 
-        // Remove the tasks with columnId reference
-        clonedBoard.tasks = clonedBoard.tasks.filter((task) => task.columnId !== columnId);
-
-        // Remove all taskIds from the column
+        const taskIds = column.taskIds;
+        clonedBoard.tasks = clonedBoard.tasks.filter((task) => !taskIds.includes(task.id));
         column.taskIds = [];
-
-        // Save changes
         data.board = clonedBoard;
 
         resolve(true);
@@ -239,10 +202,7 @@ class KanbanApi {
 
     return new Promise((resolve, reject) => {
       try {
-        // Make a deep copy
         const clonedBoard: Board = deepCopy(data.board);
-
-        // Find the column to remove
         const column = clonedBoard.columns.find((column) => column.id === columnId);
 
         if (!column) {
@@ -250,13 +210,8 @@ class KanbanApi {
           return;
         }
 
-        // Remove the tasks with columnId reference
         clonedBoard.tasks = clonedBoard.tasks.filter((task) => task.columnId !== columnId);
-
-        // Remove the column from the board
         clonedBoard.columns = clonedBoard.columns.filter((column) => column.id !== columnId);
-
-        // Save changes
         data.board = clonedBoard;
 
         resolve(true);
@@ -272,10 +227,7 @@ class KanbanApi {
 
     return new Promise((resolve, reject) => {
       try {
-        // Make a deep copy
         const clonedBoard: Board = deepCopy(data.board);
-
-        // Find the column where the new task will be added
         const column = clonedBoard.columns.find((column) => column.id === columnId);
 
         if (!column) {
@@ -283,7 +235,6 @@ class KanbanApi {
           return;
         }
 
-        // Create the new task
         const task: Task = {
           id: createResourceId(),
           assigneesIds: [],
@@ -299,13 +250,8 @@ class KanbanApi {
           name,
         };
 
-        // Add the new task
         clonedBoard.tasks.push(task);
-
-        // Add the taskId reference to the column
         column.taskIds.push(task.id);
-
-        // Save changes
         data.board = clonedBoard;
 
         resolve(deepCopy(task));
@@ -321,10 +267,7 @@ class KanbanApi {
 
     return new Promise((resolve, reject) => {
       try {
-        // Make a deep copy
         const clonedBoard: Board = deepCopy(data.board);
-
-        // Find the task that will be updated
         const task = clonedBoard.tasks.find((task) => task.id === taskId);
 
         if (!task) {
@@ -332,12 +275,8 @@ class KanbanApi {
           return;
         }
 
-        // Update the task
         Object.assign(task, update);
-
-        // Save changes
         data.board = clonedBoard;
-
         resolve(deepCopy(task));
       } catch (err) {
         console.error('[Kanban Api]: ', err);
@@ -351,10 +290,7 @@ class KanbanApi {
 
     return new Promise((resolve, reject) => {
       try {
-        // Make a deep copy
         const clonedBoard: Board = deepCopy(data.board);
-
-        // Find the task that will be moved
         const task = clonedBoard.tasks.find((task) => task.id === taskId);
 
         if (!task) {
@@ -362,7 +298,6 @@ class KanbanApi {
           return;
         }
 
-        // Find the source column of the task
         const sourceColumn = clonedBoard.columns.find((column) => column.id === task.columnId);
 
         if (!sourceColumn) {
@@ -370,14 +305,11 @@ class KanbanApi {
           return;
         }
 
-        // Remove the taskId reference from the source list
         sourceColumn.taskIds = sourceColumn.taskIds.filter((id) => taskId !== id);
 
         if (!columnId) {
-          // If columnId is not provided, it means that we move the task in the same list
           sourceColumn.taskIds.splice(position, 0, task.id);
         } else {
-          // Find the destination column for the task
           const destinationColumn = clonedBoard.columns.find((column) => column.id === columnId);
 
           if (!destinationColumn) {
@@ -385,16 +317,11 @@ class KanbanApi {
             return;
           }
 
-          // Add the taskId reference to the destination list
           destinationColumn.taskIds.splice(position, 0, task.id);
-
-          // Store the new columnId reference
           task.columnId = destinationColumn.id;
         }
 
-        // Save changes
         data.board = clonedBoard;
-
         resolve(true);
       } catch (err) {
         console.error('[Kanban Api]: ', err);
@@ -408,10 +335,7 @@ class KanbanApi {
 
     return new Promise((resolve, reject) => {
       try {
-        // Make a deep copy
         const clonedBoard: Board = deepCopy(data.board);
-
-        // Find the task that will be removed
         const task = clonedBoard.tasks.find((task) => task.id === taskId);
 
         if (!task) {
@@ -419,20 +343,15 @@ class KanbanApi {
           return;
         }
 
-        // Remove the task from board
         clonedBoard.tasks = clonedBoard.tasks.filter((task) => task.id !== taskId);
 
-        // Find the column using the columnId reference
         const column = clonedBoard.columns.find((column) => column.id === task.columnId);
 
-        // If for some reason it does not exist, there's no problem. Maybe something broke before.
         if (column) {
           column.taskIds = column.taskIds.filter((_taskId) => _taskId !== taskId);
         }
 
-        // Save changes
         data.board = clonedBoard;
-
         resolve(true);
       } catch (err) {
         console.error('[Kanban Api]: ', err);
@@ -446,10 +365,7 @@ class KanbanApi {
 
     return new Promise((resolve, reject) => {
       try {
-        // Make a deep copy
         const clonedBoard: Board = deepCopy(data.board);
-
-        // Find the task where the comment will be added
         const task = clonedBoard.tasks.find((task) => task.id === taskId);
 
         if (!task) {
@@ -457,7 +373,6 @@ class KanbanApi {
           return;
         }
 
-        // Create the new comment
         const comment = {
           id: createResourceId(),
           authorId: user.id,
@@ -465,12 +380,8 @@ class KanbanApi {
           message,
         };
 
-        // Add the new comment to task
         task.comments.push(comment);
-
-        // Save changes
         data.board = clonedBoard;
-
         resolve(deepCopy(comment));
       } catch (err) {
         console.error('[Kanban Api]: ', err);
@@ -484,10 +395,7 @@ class KanbanApi {
 
     return new Promise((resolve, reject) => {
       try {
-        // Make a deep copy
         const clonedBoard: Board = deepCopy(data.board);
-
-        // Find the task where the checklist will be added
         const task = clonedBoard.tasks.find((task) => task.id === taskId);
 
         if (!task) {
@@ -495,19 +403,14 @@ class KanbanApi {
           return;
         }
 
-        // Create the new checklist
         const checklist: Checklist = {
           id: createResourceId(),
           name,
           checkItems: [],
         };
 
-        // Add the new checklist to task
         task.checklists.push(checklist);
-
-        // Save changes
         data.board = clonedBoard;
-
         resolve(deepCopy(checklist));
       } catch (err) {
         console.error('[Kanban Api]: ', err);
@@ -521,10 +424,7 @@ class KanbanApi {
 
     return new Promise((resolve, reject) => {
       try {
-        // Make a deep copy
         const clonedBoard: Board = deepCopy(data.board);
-
-        // Find the task that contains the checklist that will be updated
         const task = clonedBoard.tasks.find((task) => task.id === taskId);
 
         if (!task) {
@@ -532,7 +432,6 @@ class KanbanApi {
           return;
         }
 
-        // Find the checklist that will be updated
         const checklist = task.checklists.find((checklist) => checklist.id === checklistId);
 
         if (!checklist) {
@@ -540,12 +439,8 @@ class KanbanApi {
           return;
         }
 
-        // Update the checklist
         Object.assign(checklist, update);
-
-        // Save changes
         data.board = clonedBoard;
-
         resolve(deepCopy(checklist));
       } catch (err) {
         console.error('[Kanban Api]: ', err);
@@ -559,10 +454,7 @@ class KanbanApi {
 
     return new Promise((resolve, reject) => {
       try {
-        // Make a deep copy
         const clonedBoard: Board = deepCopy(data.board);
-
-        // Find the task that contains the checklist that will be removed
         const task = clonedBoard.tasks.find((task) => task.id === taskId);
 
         if (!task) {
@@ -570,12 +462,8 @@ class KanbanApi {
           return;
         }
 
-        // Remove the checklist from the task
         task.checklists = task.checklists.filter((checklists) => checklists.id !== checklistId);
-
-        // Save changes
         data.board = clonedBoard;
-
         resolve(true);
       } catch (err) {
         console.error('[Kanban Api]: ', err);
@@ -589,10 +477,7 @@ class KanbanApi {
 
     return new Promise((resolve, reject) => {
       try {
-        // Make a deep copy
         const clonedBoard: Board = deepCopy(data.board);
-
-        // Find the task where the checklist will be added
         const task = clonedBoard.tasks.find((task) => task.id === taskId);
 
         if (!task) {
@@ -600,7 +485,6 @@ class KanbanApi {
           return;
         }
 
-        // Find the checklist where the check item will be added
         const checklist = task.checklists.find((checklist) => checklist.id === checklistId);
 
         if (!checklist) {
@@ -608,19 +492,14 @@ class KanbanApi {
           return;
         }
 
-        // Create the new check item
         const checkItem: CheckItem = {
           id: createResourceId(),
           name,
           state: 'incomplete',
         };
 
-        // Add the check item to the checklist
         checklist.checkItems.push(checkItem);
-
-        // Save changes
         data.board = clonedBoard;
-
         resolve(deepCopy(checkItem));
       } catch (err) {
         console.error('[Kanban Api]: ', err);
@@ -634,10 +513,7 @@ class KanbanApi {
 
     return new Promise((resolve, reject) => {
       try {
-        // Make a deep copy
         const clonedBoard: Board = deepCopy(data.board);
-
-        // Find the task where the checklist will be added
         const task = clonedBoard.tasks.find((task) => task.id === taskId);
 
         if (!task) {
@@ -645,7 +521,6 @@ class KanbanApi {
           return;
         }
 
-        // Find the checklist where the check item will be updated
         const checklist = task.checklists.find((checklist) => checklist.id === checklistId);
 
         if (!checklist) {
@@ -653,7 +528,6 @@ class KanbanApi {
           return;
         }
 
-        // Find the checklist where the check item will be updated
         const checkItem = checklist.checkItems.find((checkItem) => checkItem.id === checkItemId);
 
         if (!checkItem) {
@@ -661,12 +535,8 @@ class KanbanApi {
           return;
         }
 
-        // Update the check item
         Object.assign(checkItem, update);
-
-        // Save changes
         data.board = clonedBoard;
-
         resolve(deepCopy(checkItem));
       } catch (err) {
         console.error('[Kanban Api]: ', err);
@@ -680,10 +550,7 @@ class KanbanApi {
 
     return new Promise((resolve, reject) => {
       try {
-        // Make a deep copy
         const clonedBoard: Board = deepCopy(data.board);
-
-        // Find the task that contains the checklist that contains the check item that will be removed
         const task = clonedBoard.tasks.find((task) => task.id === taskId);
 
         if (!task) {
@@ -691,7 +558,6 @@ class KanbanApi {
           return;
         }
 
-        // Find the checklist where the check item will be updated
         const checklist = task.checklists.find((checklist) => checklist.id === checklistId);
 
         if (!checklist) {
@@ -699,14 +565,11 @@ class KanbanApi {
           return;
         }
 
-        // Remove the check item from the checklist
         checklist.checkItems = checklist.checkItems.filter(
           (checkItem) => checkItem.id !== checkItemId
         );
 
-        // Save changes
         data.board = clonedBoard;
-
         resolve(true);
       } catch (err) {
         console.error('[Kanban Api]: ', err);

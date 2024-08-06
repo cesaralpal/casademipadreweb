@@ -303,15 +303,15 @@ export const useSections = () => {
               </SvgIcon>
             ),
           },
-          // {
-          //   title: t(tokens.nav.kanban),
-          //   path: paths.dashboard.kanban,
-          //   icon: (
-          //     <SvgIcon fontSize="small">
-          //       <CheckDone01Icon />
-          //     </SvgIcon>
-          //   ),
-          // },
+          {
+            title: t(tokens.nav.kanban),
+            path: paths.dashboard.kanban,
+            icon: (
+              <SvgIcon fontSize="small">
+                <CheckDone01Icon />
+              </SvgIcon>
+            ),
+          },
           // {
           //   title: t(tokens.nav.mail),
           //   path: paths.dashboard.mail,

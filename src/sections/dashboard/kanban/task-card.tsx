@@ -26,6 +26,16 @@ const useTask = (taskId: string): Task | undefined => {
   });
 };
 
+const handleAction = (label: string, action?: 'copy' | 'redirect', url?: string) => {
+  if (action === 'copy') {
+    navigator.clipboard.writeText(label).then(() => {
+      alert('Label copied to clipboard!');
+    });
+  } else if (action === 'redirect' && url) {
+    window.location.href = url;
+  }
+};
+
 const useAssignees = (assigneesIds?: string[]): Member[] => {
   return useSelector((state: RootState) => {
     const { members } = state.kanban;
@@ -54,7 +64,9 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
   if (!task) {
     return null;
   }
-
+  const handleRedirect = (url:string) => {
+    window.location.href = url;
+  };
   const hasAssignees = task.assigneesIds.length > 0;
   const hasAttachments = task.attachments.length > 0;
   const hasChecklists = task.checklists.length > 0;
@@ -85,16 +97,7 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
       }}
       {...other}
     >
-      {hasAttachments && (
-        <CardMedia
-          image={task.attachments[0].url}
-          sx={{
-            borderRadius: 1.5,
-            height: 120,
-            mb: 1,
-          }}
-        />
-      )}
+    
       <Typography variant="subtitle1">{task.name}</Typography>
       {hasLabels && (
         <Box
@@ -112,6 +115,8 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
               label={label}
               size="small"
               sx={{ m: 1 }}
+              onClick={() => handleAction(label, 'redirect', label)}
+
             />
           ))}
         </Box>
